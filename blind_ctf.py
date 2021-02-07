@@ -112,7 +112,7 @@ class Blind():
 
 	def get_schemas(self):
 		cond = '(SELECT GROUP_CONCAT(DISTINCT table_schema) FROM '
-		cond += 'information_schema.tables'
+		cond += 'information_schema.tables)'
 		return self.get_string(cond)
 
 	def get_tables(self, db=None):
