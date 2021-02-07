@@ -58,7 +58,6 @@ class Blind():
 			else:
 				return False
 
-
 	def get_length(self, item):
 		self.expression = item
 		condition = 'LENGTH(' + item + ')={}'
