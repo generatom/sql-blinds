@@ -29,7 +29,7 @@ class Blind():
 
 		end = time()
 
-		return self.validate(self.method, start, end, r)
+		return self.validate(start, end, r)
 
 	def make_time_payload(self, cond):
 		query = "' OR IF(" + cond + ",SLEEP(" + str(self.delay) + \
