@@ -10,7 +10,7 @@ def create_app():
 
     @app.route('/')
     def index():
-        return render_template('index')
+        return render_template('index.html')
 
     @app.route('/check', methods=['GET', 'POST'])
     def check():

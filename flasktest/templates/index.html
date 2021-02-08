@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<form method="post">
+  <label for="inject">Code to inject:</label>
+  <input type="text" name="inject">
+  <input type="submit" value="Inject">
+</form>
+{{ inject }}
+{% endblock %}
