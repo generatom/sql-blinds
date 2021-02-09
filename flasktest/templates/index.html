@@ -1,9 +1,39 @@
 {% extends "base.html" %}
+{% block style %}
+.wrapper {
+  display: flex;
+  flex-direction: row;
+}
+.wrapper > div {
+  margin: 0 1rem;
+  width: 50%;
+}
+form {
+  display: flex;
+}
+form input[type="text"] {
+  flex: 1 1 auto;
+}
+{% endblock %}
 {% block content %}
 <form method="post">
   <label for="inject">Code to inject:</label>
   <input type="text" name="inject">
   <input type="submit" value="Inject">
 </form>
-<p>{{ inject|safe }}</p>
+<div class="wrapper">
+  <div class="searches">
+    <h2>Searches</h2>
+    <ol>
+      <li>test</li>
+    {% for search in searches %}
+      <li>{{ search }}</li>
+    {% endfor %}
+    </ol>
+  </div>
+  <div class="results">
+    <h2>Result</h2>
+    <p>{{ inject|safe }}</p>
+  </div>
+</div>
 {% endblock %}
