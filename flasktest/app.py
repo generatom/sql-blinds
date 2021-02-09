@@ -1,6 +1,7 @@
 from flask import Flask, render_template, render_template_string, request
 import os
 import lipsum
+from db import get_db
 
 
 def create_app():
@@ -10,12 +11,24 @@ def create_app():
         DATABASE=os.path.join(app.instance_path, 'test.sqlite'),
     )
 
+    try:
+        os.makedirs(app.instance_path)
+    except OSError:
+        pass
+
+    import db
+    db.init_app(app)
+
     @app.route('/', methods=['GET', 'POST'])
     def index():
+        db = get_db()
         if request.method == 'POST':
-            injection = render_template_string(request.form['inject'])
-            return render_template('index.html', inject=injection)
+            inject_string = request.form['inject']
+            injection = render_template_string(inject_string)
+            db.add_search(inject_string)
+            return render_template('index.html', inject=injection,
+                                   searches=db.get_searches())
 
-        return render_template('index.html')
+        return render_template('index.html', searches=db.get_searches())
 
     return app
