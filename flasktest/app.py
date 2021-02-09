@@ -1,4 +1,6 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, render_template_string, request
+import os
+import lipsum
 
 
 def create_app():
@@ -8,10 +10,12 @@ def create_app():
         DATABASE=os.path.join(app.instance_path, 'test.sqlite'),
     )
 
-    @app.route('/')
+    @app.route('/', methods=['GET', 'POST'])
     def index():
+        if request.method == 'POST':
+            injection = render_template_string(request.form['inject'])
+            return render_template('index.html', inject=injection)
+
         return render_template('index.html')
 
-    @app.route('/check', methods=['GET', 'POST'])
-    def check():
-        if request.method == 'POST':
+    return app
