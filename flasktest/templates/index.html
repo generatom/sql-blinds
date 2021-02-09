@@ -25,9 +25,8 @@ form input[type="text"] {
   <div class="searches">
     <h2>Searches</h2>
     <ol>
-      <li>test</li>
     {% for search in searches %}
-      <li>{{ search }}</li>
+      <li>{{ search.search }}</li>
     {% endfor %}
     </ol>
   </div>
