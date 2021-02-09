@@ -36,7 +36,7 @@ class Database():
 
     def reset(self):
         with current_app.open_resource('schema.sql') as f:
-            db.executescript(f.read().decode('utf8'))
+            self.executescript(f.read().decode('utf8'))
 
 
 def get_db():

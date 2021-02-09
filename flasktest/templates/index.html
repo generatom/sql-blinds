@@ -24,7 +24,7 @@ form input[type="text"] {
 <div class="wrapper">
   <div class="searches">
     <h2>History</h2>
-    <a href="{{ urlfor('reset') }}" class="btn">Reset</a>
+    <a href="{{ url_for('reset') }}" class="btn">Reset</a>
     <ol>
     {% for search in searches %}
       <li>{{ search.search }}</li>
