@@ -34,6 +34,10 @@ class Database():
         cur = self.execute(query)
         return cur.fetchall()
 
+    def reset(self):
+        with current_app.open_resource('schema.sql') as f:
+            db.executescript(f.read().decode('utf8'))
+
 
 def get_db():
     if 'db' not in g:

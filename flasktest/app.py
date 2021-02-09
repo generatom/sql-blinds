@@ -1,4 +1,5 @@
 from flask import Flask, render_template, render_template_string, request
+from flask import redirect, url_for
 import os
 import lipsum
 from db import get_db
@@ -30,5 +31,12 @@ def create_app():
                                    searches=db.get_searches())
 
         return render_template('index.html', searches=db.get_searches())
+
+    @app.route('/reset')
+    def reset():
+        db = get_db()
+        db.reset()
+        
+        return redirect(url_for('index'))
 
     return app
