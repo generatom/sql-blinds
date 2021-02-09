@@ -83,12 +83,23 @@ def get_args():
 	parser.add_argument('-v', action='count', default=0, help='Verbosity')
 	parser.add_argument('-q', '--quote', action='count', default=0)
 	parser.add_argument('-c', '--chars', action='store_true')
+	parser.add_argument('-u', '--url')
 	return parser.parse_args()
 
 
 if __name__ == '__main__':
 	args = get_args()
-	url = 'http://10.102.0.62/user/register?c=(L=lipsum)'
+
+	if args.url:
+		url = args.url
+		with open('.url', 'w') as f:
+			f.write(url)
+	else:
+		try:
+			with open('.url') as f:
+				url = f.read()
+		except FileNotFoundError:
+			url = 'http://10.102.0.62/user/register?c=(L=lipsum)'
 
 	if args.chars:
 		s = SSTI(url, debug=args.v, status=1)
