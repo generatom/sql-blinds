@@ -4,13 +4,40 @@ from flask import current_app, g
 from flask.cli import with_appcontext
 
 
-def get_db():
-    if 'db' not in g:
-        g.db = sqlite3.connect(
+class Database():
+    def __init__(self, path=None):
+        if not path:
+            path = current_app.config['DATABASE']
+
+        self.db = self.connect(path)
+        self.execute = self.db.execute
+        self.executescript = self.db.executescript
+        self.commit = self.db.commit
+        self.close = self.db.close
+
+    def connect(self, path):
+        db = sqlite3.connect(
             current_app.config['DATABASE'],
             detect_types=sqlite3.PARSE_DECLTYPES,
         )
-        g.db.row_factory = sqlite3.Row
+        db.row_factory = sqlite3.Row
+        return db
+
+    def add_search(self, search):
+        query = 'INSERT INTO searches (search) VALUES (?)'
+        params = (search, )
+        self.execute(query, params)
+        self.commit()
+
+    def get_searches(self):
+        query = 'SELECT * FROM searches ORDER BY time DESC'
+        cur = self.execute(query)
+        return cur.fetchall()
+
+
+def get_db():
+    if 'db' not in g:
+        g.db = Database()
 
     return g.db
 
