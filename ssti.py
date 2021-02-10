@@ -22,8 +22,12 @@ class SSTI():
 			3: quote_plus(code),
 			4: '{%' + quote_plus(code) + '%}'
 		}
+		try:
+			user = quoted_code[self.status] + '@b.co'
+		except KeyError:
+			print('That quote level does not exist. Using default of 0')
+			user = quoted_code[0] + '@b.co'
 
-		user = quoted_code[self.status] + '@b.co'
 		if len(user) < self.min_len:
 			user = user.replace('@', '@' +
 								'b' * self.min_len - len(user))
