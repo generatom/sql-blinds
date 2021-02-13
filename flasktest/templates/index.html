@@ -27,13 +27,17 @@ form input[type="text"] {
     <a href="{{ url_for('reset') }}" class="btn">Reset</a>
     <ol>
     {% for search in searches %}
-      <li>{{ search.search }}</li>
+      <li>
+        <a href="{{ url_for('index')}}">
+          {{ search.search }}
+        </a>
+      </li>
     {% endfor %}
     </ol>
   </div>
   <div class="results">
     <h2>Result</h2>
-    <p>{{ inject|safe }}</p>
+      <p>{{ inject|safe }}</p>
   </div>
 </div>
 {% endblock %}

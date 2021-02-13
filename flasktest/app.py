@@ -21,7 +21,7 @@ def create_app():
     db.init_app(app)
 
     @app.route('/', methods=['GET', 'POST'])
-    def index():
+    def index(v=""):
         db = get_db()
         if request.method == 'POST':
             inject_string = request.form['inject']
@@ -30,13 +30,14 @@ def create_app():
             return render_template('index.html', inject=injection,
                                    searches=db.get_searches())
 
-        return render_template('index.html', searches=db.get_searches())
+        return render_template('index.html', searches=db.get_searches(),
+                                value=v)
 
     @app.route('/reset')
     def reset():
         db = get_db()
         db.reset()
-        
+
         return redirect(url_for('index'))
 
     return app
